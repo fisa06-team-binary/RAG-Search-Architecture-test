@@ -2,3 +2,4 @@ venv
 data
 financial_rag_db
 .env
+test1_env
