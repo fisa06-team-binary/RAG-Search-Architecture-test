@@ -11,8 +11,27 @@ model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 client_db = chromadb.PersistentClient(path="./financial_rag_db")
 collection = client_db.get_collection(name="card_member_data")
 
-qrels_df = pd.read_csv("qrels.csv")
-qrels_dict = {q_id: qrels_df[qrels_df['query_id'] == q_id]['doc_id'].astype(str).tolist() for q_id in qrels_df['query_id'].unique()}
+
+# 1. 파일 읽기 및 공백 제거 
+qrels_df = pd.read_csv("qrels2.csv")
+
+qrels_df['query_id'] = qrels_df['query_id'].astype(str).str.strip()
+qrels_df['doc_id'] = qrels_df['doc_id'].astype(str).str.strip()
+
+qrels_dict = {
+    q_id: qrels_df[qrels_df['query_id'] == q_id]['doc_id'].tolist() 
+    for q_id in qrels_df['query_id'].unique()
+}
+
+# [디버깅 출력] 질문별로 정답이 몇 개씩 로드되었는지 확인
+print("\n" + "="*50)
+print("[시스템 체크] 정답지(Qrels) 로드 현황")
+for q_id in ["q1", "q2_silver", "q2_gourmet", "q2_shopping"]:
+    count = len(qrels_dict.get(q_id, []))
+    print(f"👉 ID: {q_id:<12} | 정답 수: {count:>3}개 {'✅' if count > 0 else '확인 필요'}")
+print("="*50 + "\n")
+# qrels_df = pd.read_csv("qrels2.csv")
+# qrels_dict = {q_id: qrels_df[qrels_df['query_id'] == q_id]['doc_id'].astype(str).tolist() for q_id in qrels_df['query_id'].unique()}
 
 queries_info = [
     {
@@ -21,15 +40,33 @@ queries_info = [
         "where": {"$and": [{"SIDO": "서울"}, {"AGE": {"$gte": 40}}, {"AGE": {"$lt": 50}}]},
         "llm_prompt": "이 고객의 요약 데이터에 '학원', '서적', '교육'과 관련된 지출이 명시되어 있으면 YES. '유통'이나 '요식업'만 있으면 무조건 NO로 답해."
     },
+    
     {
-        "q_id": "q2", 
-        "text": "경기에 거주하는 50대 고객 중 자동차나 주유 관련 소비가 많은 사람을 찾아줘.",
-        "where": {"$and": [{"SIDO": "경기"}, {"AGE": {"$gte": 50}}, {"AGE": {"$lt": 60}}]},
-        "llm_prompt": "이 고객의 요약 데이터에 '자동차', '연료', '정비', '주유' 관련 지출이 명시되어 있으면 YES. 그 외에는 NO로 답해."
+    "q_id": "q2_silver", 
+    "text": "경기에 거주하는 5060 세대 중 병원이나 보험 등 의료 관련 지출이 잦은 고객을 찾아줘.",
+    "where": {"$and": [{"SIDO": "경기"}, {"AGE": {"$gte": 50}}]}, # 50세 이상 전체
+    "llm_prompt": "이 고객의 요약 데이터에 '병원', '의료', '보험', '약국' 관련 지출이 명시되어 있으면 YES. 단순히 '유통' 지출만 있으면 NO로 답해."
+    },
+    {
+    "q_id": "q2_gourmet", 
+    "text": "서울에 거주하는 3040 고객 중 식당이나 카페 등 외식 소비가 활발한 미식가 타겟을 추천해줘.",
+    "where": {"$and": [{"SIDO": "서울"}, {"AGE": {"$gte": 30}}, {"AGE": {"$lt": 50}}]},
+    "llm_prompt": "이 고객의 요약 데이터에 '식당', '카페', '요식', '음식점' 관련 지출이 높다고 명시되어 있으면 YES. 아니면 NO로 답해."
+    },
+    {
+        "q_id": "q2_shopping", 
+        "text": "지역에 상관없이 2050 세대 중 백화점이나 대형마트 등 유통업 소비 규모가 큰 쇼핑 우수 고객을 찾아줘.",
+        "where": {
+            "$and": [
+                {"AGE": {"$gte": 20}},
+                {"AGE": {"$lt": 60}}
+            ]
+        },
+        "llm_prompt": "이 고객의 요약 데이터에 '유통', '백화점', '마트', '영리' 관련 지출이 지배적이면 YES. 아니면 NO로 답해."
     }
 ]
 
-# 💡 평가 지표 계산 전용 함수 (Precision, Recall, F1 Score)
+# 평가 지표 계산 전용 함수 (Precision, Recall, F1 Score)
 def calc_metrics(hits, retrieved_count, true_total):
     precision = (hits / retrieved_count) if retrieved_count > 0 else 0.0
     recall = (hits / true_total) if true_total > 0 else 0.0
@@ -43,7 +80,7 @@ def calc_metrics(hits, retrieved_count, true_total):
 
 def evaluate_pipeline():
     results_list = []
-    retrieve_k = 50  # 20명 검색
+    retrieve_k = 50  # 50명 검색
 
     for info in queries_info:
         q_id = info["q_id"]
@@ -89,6 +126,6 @@ def evaluate_pipeline():
     return pd.DataFrame(results_list)
 
 print("\n" + "="*80)
-print("🚀 [최종 평가 결과] P=정밀도(Precision), R=재현율(Recall), F1=조화평균")
+print("[최종 평가 결과] P=정밀도(Precision), R=재현율(Recall), F1=조화평균")
 print("="*80)
 print(evaluate_pipeline().to_string(index=False))

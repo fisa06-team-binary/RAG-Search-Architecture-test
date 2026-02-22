@@ -11,7 +11,7 @@ model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 client_db = chromadb.PersistentClient(path="./financial_rag_db")
 collection = client_db.get_collection(name="card_member_data")
 
-qrels_df = pd.read_csv("qrels.csv")
+qrels_df = pd.read_csv("qrels2.csv")
 qrels_dict = {q_id: qrels_df[qrels_df['query_id'] == q_id]['doc_id'].astype(str).tolist() for q_id in qrels_df['query_id'].unique()}
 
 # queries_info = [
