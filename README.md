@@ -1,6 +1,6 @@
 # 🎯 하이브리드 RAG 기반 금융 타겟 마케팅 최적화 시스템
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-green)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector%20DB-orange)
 ![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-MiniLM-yellow)
