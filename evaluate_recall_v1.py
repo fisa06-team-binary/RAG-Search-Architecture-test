@@ -13,7 +13,7 @@ collection = client_db.get_collection(name="card_member_data")
 
 
 # 1. 파일 읽기 및 공백 제거 
-qrels_df = pd.read_csv("qrels2.csv")
+qrels_df = pd.read_csv("qrels_v1.csv")
 
 qrels_df['query_id'] = qrels_df['query_id'].astype(str).str.strip()
 qrels_df['doc_id'] = qrels_df['doc_id'].astype(str).str.strip()

@@ -37,31 +37,31 @@ q1_answers = seoul_40[seoul_40['summary'].str.contains('학원|교육|서적|OFF
 for _, row in q1_answers.iterrows():
     qrels_data.append({"query_id": "q1", "doc_id": str(row['DID_SEQ'])})
 
-# [Q2 정답] 경기 50대 + 자동차/주유 지출
-gg_50 = df[(df['HOUS_SIDO_NM'] == '경기') & (df['AGE'] >= 50) & (df['AGE'] < 60)]
-q2_answers = gg_50[gg_50['summary'].str.contains('자동차|주유|연료|AUTO|FUEL', na=False, case=False)]
+# # [Q2 정답] 경기 50대 + 자동차/주유 지출
+# gg_50 = df[(df['HOUS_SIDO_NM'] == '경기') & (df['AGE'] >= 50) & (df['AGE'] < 60)]
+# q2_answers = gg_50[gg_50['summary'].str.contains('자동차|주유|연료|AUTO|FUEL', na=False, case=False)]
+# for _, row in q2_answers.iterrows():
+#     qrels_data.append({"query_id": "q2", "doc_id": str(row['DID_SEQ'])})
+
+# [Q2] 경기 5060 + 의료/보험
+q2_cond = (df['HOUS_SIDO_NM'] == '경기') & (df['AGE'] >= 50)
+q2_answers = df[q2_cond & df['summary'].str.contains('병원|의료|보험|약국|HOSP|INSU', na=False, case=False)]
 for _, row in q2_answers.iterrows():
     qrels_data.append({"query_id": "q2", "doc_id": str(row['DID_SEQ'])})
 
-# [Q2_SILVER] 경기 5060 + 의료/보험
-q2_silver_cond = (df['HOUS_SIDO_NM'] == '경기') & (df['AGE'] >= 50)
-q2_silver_answers = df[q2_silver_cond & df['summary'].str.contains('병원|의료|보험|약국|HOSP|INSU', na=False, case=False)]
-for _, row in q2_silver_answers.iterrows():
-    qrels_data.append({"query_id": "q2_silver", "doc_id": str(row['DID_SEQ'])})
+# [Q3] 서울 3040 + 외식/미식
+q3_cond = (df['HOUS_SIDO_NM'] == '서울') & (df['AGE'] >= 30) & (df['AGE'] < 50)
+q3_answers = df[q3_cond & df['summary'].str.contains('식당|카페|요식|음식점|FSBZ|CAFE', na=False, case=False)]
+for _, row in q3_answers.iterrows():
+    qrels_data.append({"query_id": "q3", "doc_id": str(row['DID_SEQ'])})
 
-# [Q2_GOURMET] 서울 3040 + 외식/미식
-q2_gourmet_cond = (df['HOUS_SIDO_NM'] == '서울') & (df['AGE'] >= 30) & (df['AGE'] < 50)
-q2_gourmet_answers = df[q2_gourmet_cond & df['summary'].str.contains('식당|카페|요식|음식점|FSBZ|CAFE', na=False, case=False)]
-for _, row in q2_gourmet_answers.iterrows():
-    qrels_data.append({"query_id": "q2_gourmet", "doc_id": str(row['DID_SEQ'])})
-
-# [Q2_SHOPPING] 전지역 2050 + 유통/쇼핑
-q2_shopping_cond = (df['AGE'] >= 20) & (df['AGE'] < 60)
-q2_shopping_answers = df[q2_shopping_cond & df['summary'].str.contains('유통|백화점|마트|영리|DIST|MART', na=False, case=False)]
-for _, row in q2_shopping_answers.iterrows():
-    qrels_data.append({"query_id": "q2_shopping", "doc_id": str(row['DID_SEQ'])})
+# [Q4] 전지역 2050 + 유통/쇼핑
+q4_cond = (df['AGE'] >= 20) & (df['AGE'] < 60)
+q4_answers = df[q4_cond & df['summary'].str.contains('유통|백화점|마트|영리|DIST|MART', na=False, case=False)]
+for _, row in q4_answers.iterrows():
+    qrels_data.append({"query_id": "q4", "doc_id": str(row['DID_SEQ'])})
 
 # CSV 저장 (BOM 추가로 한글 깨짐 방지)
-pd.DataFrame(qrels_data).to_csv("qrels2.csv", index=False, encoding='utf-8-sig')
+pd.DataFrame(qrels_data).to_csv("qrels_v2.csv", index=False, encoding='utf-8-sig')
 
 print(f"총 {len(qrels_data)}개의 정답을 포함한 'qrels2.csv' 생성 완료!")
